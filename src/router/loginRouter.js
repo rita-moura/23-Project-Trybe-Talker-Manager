@@ -1,9 +1,12 @@
 const { Router } = require('express');
+const { isValidLogin, isValidEmailAndPassword } = require('../middleware/validateLogin');
 const randomToken = require('../services/randomToken');
 
 const loginRouter = Router();
 
-loginRouter.post('/', async (req, res) => {
+const validation = [isValidLogin, isValidEmailAndPassword];
+
+loginRouter.post('/', ...validation, async (req, res) => {
   const { email, password } = req.body;
 
   if (email && password) {
