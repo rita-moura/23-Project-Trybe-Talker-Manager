@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const readJsonData = require('../files/readFs');
 const { validation } = require('../middleware');
+const { isValidToken } = require('../middleware/validateTalker');
 
 const talkerRouter = Router();
 
@@ -50,22 +51,34 @@ talkerRouter.post('/', ...validation, async (req, res) => {
 talkerRouter.put('/:id', ...validation, async (req, res) => {
   const talkers = await readJsonData(talkerPath);
   const { name, age, talk } = req.body;
-  const { id } = req.params;
-  const talkerById = talkers.find((talker) => talker.id === Number(id));
+
+  const talkerById = talkers.find(({ id }) => id === Number(req.params.id));
 
   if (!talkerById) {
     return res.status(404).json({
       message: 'Pessoa palestrante não encontrada',
     });
   }
-  
-  const indexTalker = talkers.findIndex((talker) => talker.id === Number(id));
-  talkers[indexTalker] = { id: Number(id), name, age, talk };
+
+  const indexTalker = talkers.findIndex(({ id }) => id === Number(req.params.id));
+  talkers[indexTalker] = { id: Number(req.params.id), name, age, talk };
 
   const updatedtalkers = JSON.stringify(talkers, null, 2);
   await fs.writeFile(talkerPath, updatedtalkers);
 
   return res.status(200).json(talkers[indexTalker]);
+});
+
+talkerRouter.delete('/:id', isValidToken, async (req, res) => {
+  const talkers = await readJsonData(talkerPath);
+  const { id } = req.params;
+
+  const indexTalker = talkers.findIndex((movie) => movie.id === Number(id));
+
+  talkers.splice(indexTalker, 1);
+  await fs.writeFile(talkerPath, JSON.stringify(talkers));
+
+  return res.status(204).json();
 });
 
 module.exports = {
