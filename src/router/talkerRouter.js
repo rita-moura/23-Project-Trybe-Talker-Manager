@@ -1,6 +1,8 @@
 const { Router } = require('express');
 const path = require('path');
+const fs = require('fs').promises;
 const readJsonData = require('../files/readFs');
+const { validation } = require('../middleware');
 
 const talkerRouter = Router();
 
@@ -29,6 +31,20 @@ talkerRouter.get('/:id', async (req, res) => {
   }
 
   return res.status(200).json(talkerById);
+});
+
+talkerRouter.post('/', ...validation, async (req, res) => {
+  const talkers = await readJsonData(talkerPath);
+    const { name, age, talk } = req.body;
+    const newTalker = {
+      id: talkers[talkers.length - 1].id + 1,
+      name,
+      age,
+      talk,
+    };
+    const allTalker = JSON.stringify([...talkers, newTalker]);
+    await fs.writeFile(talkerPath, allTalker, null, 2);
+    res.status(201).json(newTalker);
 });
 
 module.exports = {

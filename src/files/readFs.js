@@ -5,7 +5,9 @@ const readJsonData = async (path) => {
         const data = await fs.readFile(path);
         return JSON.parse(data);
     } catch (e) {
-        console.error(`Error reading: ${e}`);
+        const error = new Error('Erro ao ler arquivo');
+        error.statusCode = 500;
+        throw error;
     }
 };
 
